@@ -1,0 +1,4 @@
+.mypy_cache
+.env
+phply
+__pycache__/

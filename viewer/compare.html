@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>CSV Comparer</title>
+  <style>
+    /* Set the body to a full height */
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    pre {
+      padding: 0;
+      margin: 0;
+    }
+
+    /* Create a container div to hold the other divs */
+    .container {
+      display: flex;
+      flex-direction: row;
+      height: 90%;
+    }
+
+    /* Set the width for the left and right sections */
+    .left-section,
+    .middle-section,
+    .right-section {
+      flex-basis: 33%;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .encoder_context {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .decoder_context {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .fixed_segment {
+      background-color: green;
+      border: 2px solid black;
+      border-radius: 10px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .prediction_segment {
+        background-color: blue;
+        border: 2px solid black;
+        border-radius: 10px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .buggy_segment {
+      background-color: red;
+      border: 2px solid black;
+      border-radius: 10px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left-section">
+      <div class="encoder_context" id="encoder_context_until">Content for e1</div>
+      <div class="buggy_segment" id="bug_id">Context of buggy segment</div>
+      <div class="encoder_context" id="encoder_context_from">Content for e2</div>
+    </div>
+    <div class="right-section">
+      <div class="decoder_context" id="decoder_context_id1">Content for d1</div>
+      <div class="prediction_segment" id="prediction_id">Content for fix</div>
+    </div>
+    <div class="middle-section">
+      <div class="decoder_context" id="decoder_context_id2">Content for d1</div>
+      <div class="fixed_segment" id="fix_id">Content for fix</div>
+    </div>
+  </div>
+  <button onclick="showNextEntry()">Next</button>
+  <button onclick="showPreviousEntry()">Previous</button>
+  <button onclick="gotoLanguage('Java')">Java</button>
+  <button onclick="gotoLanguage('JavaScript')">JavaScript</button>
+  <button onclick="gotoLanguage('Python')">Python</button>
+  <select id="myDropdown" onchange="updateFilename()">
+        <option value="correct_our_cmp.csv">Our</option>
+        <option value="correct_bugs2fix.csv">Bugs2Fix</option>
+        <option value="buggy_repos_Cli_27_buggy_src_java_org_apache_commons_cli_OptionGroup.csv"> Same path 1</option>
+        <option value="buggy_repos_Jsoup_89_buggy_src_main_java_org_jsoup_nodes_Attribute.csv"> Same path 2</option>
+        <option value="buggy_repos_JxPath_8_buggy_src_java_org_apache_commons_jxpath_ri_compiler_CoreOperationRelationalExpression.csv"> Same path 3</option>
+        <option value="buggy_repos_Lang_10_buggy_src_main_java_org_apache_commons_lang3_time_FastDateParser.csv"> Same path 4</option>
+        <option value="buggy_repos_Lang_27_buggy_src_main_java_org_apache_commons_lang3_math_NumberUtils.csv"> Same path 5</option>
+        <option value="buggy_repos_Lang_34_buggy_src_main_java_org_apache_commons_lang3_builder_ToStringStyle.csv"> Same path 6</option>
+        <option value="buggy_repos_Math_79_buggy_src_main_java_org_apache_commons_math_util_MathUtils.csv"> Same path 7</option>
+        <option value="buggy_repos_Math_81_buggy_src_main_java_org_apache_commons_math_linear_EigenDecompositionImpl.csv"> Same path 8</option>
+        <option value="best.csv"> Best </option>
+        <option value="worst.csv"> Worst </option>
+  </select>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+  <script>
+    var csvData = []; // Array to store parsed CSV data
+    var currentEntry = 0; // Current displayed entry index
+    var filename = "";
+
+    function loadCSV() {
+      console.log("Start getting and parsing csv file.");
+      Papa.parse(filename, {
+        header: false,
+        download: true,
+        complete: function(results) {
+          csvData = results.data;
+          console.log("Done getting and parsing csv file.");
+          showCurrentEntry();
+        }
+      });
+    }
+    function extractLinesAroundSubstring(inputString) {
+	  // Split the input string into an array of lines
+	  targetSubstring = "</s>";
+	  numLines = 10;
+	  const lines = inputString.split('\n');
+
+	  // Find the indices of the targetSubstring in the array
+	  const indices = [];
+	  for (let i = 0; i < lines.length; i++) {
+	    if (lines[i].includes(targetSubstring)) {
+		console.log("occuring in line "+i);
+		console.log(lines[i]);
+	      indices.push(i);
+	    }
+	  }
+
+	  // Check if we have at least two occurrences of the targetSubstring
+	  if (indices.length < 2) {
+	    return inputString;
+	  }
+
+	  // Extract the lines around the first occurrence of the targetSubstring
+	  const firstIndex = indices[0];
+	  const startIndex = Math.max(0, firstIndex - numLines);
+
+	  const lastIndex = indices[indices.length - 1];
+	  const endIndex = Math.min(lines.length - 1, lastIndex + numLines);
+
+	  const linesAroundFirstOccurrence = lines.slice(startIndex, endIndex + 1);
+
+	  return linesAroundFirstOccurrence.join("\n").replace(/</g, '&lt;').replace(/>/g, "&gt;");
+	}
+    function format_code(code){
+      return "<pre><code>"+code.replace(/</g, '&lt;').replace(/>/g, "&gt;")+"</code></pre>";
+    }
+    function first_10_lines(str){
+      var lines = str.split('\n');
+      var firstTenLines = lines.slice(0, 10).join('\n');
+      return firstTenLines;
+    }
+    function last_10_lines(str) {
+      var lines = str.split('\n');
+      var lastTenLines = lines.slice(-10).join('\n');
+      return lastTenLines;
+    }
+    function showCurrentEntry() {
+      encoder_context_until = extractLinesAroundSubstring(csvData[currentEntry][0]);
+      bug = csvData[currentEntry][1];
+      encoder_context_from = first_10_lines(csvData[currentEntry][2]);
+      if(encoder_context_from[0] == "\n"){
+        // since we already get the newline from the div
+        encoder_context_from = encoder_context_from.slice(1);
+      }
+      decoder_context = last_10_lines(csvData[currentEntry][3]);
+      prediction = csvData[currentEntry][4];
+      fix = csvData[currentEntry][5];
+      document.getElementById('encoder_context_until').innerHTML = format_code(encoder_context_until);
+      document.getElementById('bug_id').innerHTML = format_code(bug);
+      document.getElementById('encoder_context_from').innerHTML = format_code(encoder_context_from);
+      document.getElementById('decoder_context_id1').innerHTML = format_code(decoder_context);
+      document.getElementById('decoder_context_id2').innerHTML = format_code(decoder_context);
+      document.getElementById('prediction_id').innerHTML = format_code(prediction);
+      document.getElementById('fix_id').innerHTML = format_code(fix);
+    }
+    function gotoLanguage(language) {
+      console.log("searching " + language + " sample ...");
+      while(csvData[currentEntry][8] != language){
+        currentEntry++;
+      }
+      showCurrentEntry();
+    }
+    function showNextEntry() {
+      if (currentEntry < csvData.length - 1) {
+        currentEntry++;
+        showCurrentEntry();
+      }
+    }
+
+    function showPreviousEntry() {
+      if (currentEntry > 0) {
+        currentEntry--;
+        showCurrentEntry();
+      }
+    }
+    function updateFilename() {
+      var select = document.getElementById("myDropdown");
+      var selectedOption = select.options[select.selectedIndex].value;
+      filename = selectedOption; // Update the filename variable with the selected option value
+      console.log("Selected filename: " + filename);
+      loadCSV();
+    }
+  </script>
+</body>
+</html>
+
+
