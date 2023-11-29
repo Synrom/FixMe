@@ -5,7 +5,7 @@
 
 # Dataset
 
-- the dataset can be downloaded at {url}
+- the dataset can be downloaded at [anonymised]()
 
 ## Dataset Extraction
 [phply](https://github.com/viraptor/phply) needs to be downloaded and places in `dataset/extract/`\
@@ -28,7 +28,7 @@ The training processes starts by tokenizing all needed datasets. This can be don
 $ python -m fixme.run tokenize <graphcodebert/unixcoder> <source CSV-path> <CSV-path to save tokenized dataset>
 ```
 
-After that, you need to figure out the learning rate:
+After that, a good learning rate can be figured out using a heuristic introduced by [Leslie N. Smith](https://ieeexplore.ieee.org/abstract/document/7926641)
 ```bash
 $ python -m fixme.run learning <graphcodebert/unixcoder> <tokenized train path>
 ```
@@ -48,10 +48,10 @@ $ python -m fixme.run test <graphcodebert/unixcoder> <tokenized test set> <outpu
 
 ## Defects4j
 
-Part of our evaluation works on the Defects4J benchmark. To do so:
+Part of our evaluation works on the [Defects4J](https://github.com/rjust/defects4j) benchmark. The workflow here is as follows:
 - first execute `initialize.sh`. That creates the directories `repo_dir` and `bugids_dir` and `bugs2fix_dir`
-- then execute `create.py` to extract a csv of bug samples for our models
-- the CSV then needs to be tokenized and after that fixes are generated using the following command:
+- then execute `create.py` to extract a CSV-file of bug samples
+- the CSV then needs to be tokenized and after that, fixes are generated using the following command:
 ```bash
 $ python -m fixme.run test <graphcodebert/unixcoder> <tokenized test set> <output directory> <path to loaded model>
 ```
@@ -59,12 +59,12 @@ $ python -m fixme.run test <graphcodebert/unixcoder> <tokenized test set> <outpu
 
 ## Bugs2Fix
 
-Before the model can be trained on Bugs2Fix, the dataset first must be tokenized. This can be done using the following command:
+Before the model can be trained on [Bugs2Fix](https://sites.google.com/view/learning-fixes), the dataset first must be tokenized. This can be done using the following command:
 ```bash
 $ python -m fixme.run tokenize_bugs2fix  <graphcodebert/unixcoder> <source path>,<target path> <CSV-path to save tokenized dataset>
 ```
 After that, the evaluation can be done using the following python scripts:
-- `bugs2fix/create.py` creates a csv of samples of abstracted bugs for models trained on bugs2fix
+- `bugs2fix/create.py` creates a CSV-file containing samples of abstracted bugs
 - `bugs2fix/abs2src.py` maps abstract fix predictions back to their concrete form
 - `bugs2fix/replace_and_test.py` inserts predicted fixes in repositores and executes test suites
 
