@@ -1,0 +1,9 @@
+cchardet
+pandas
+tqdm
+torch
+numpy
+nltk
+transformers
+tree_sitter
+fastai
