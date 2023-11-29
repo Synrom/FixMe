@@ -3,8 +3,8 @@ The dataset can be downloaded at [Anonym]() and the models are available at [Ano
 # Requirements
 
 - [Defects4J](https://github.com/rjust/defects4j)
-- [src2abs] (https://github.com/micheletufano/src2abs)
-- Dependencies are listed in `requirements.txt`
+- [src2abs](https://github.com/micheletufano/src2abs)
+- Python dependencies are listed in `requirements.txt`
 
 # Dataset Extraction
 [phply](https://github.com/viraptor/phply) needs to be downloaded and places in `dataset/extract/`\
