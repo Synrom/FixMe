@@ -1,5 +1,4 @@
 from typing import List, Optional, Tuple
-import matplotlib.pyplot as plt
 import csv
 import pandas as pd
 from dataclasses import asdict
